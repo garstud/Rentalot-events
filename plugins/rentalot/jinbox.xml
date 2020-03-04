@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension version="3.8" type="plugin" group="rentalot" method="upgrade">
+	<name>plg_rentalot_jinbox</name>
+	<author>Marc Studer</author>
+	<creationDate>March 2020</creationDate>
+	<license>GNU/GPL v2</license>
+	<version>0.1.0</version>
+	<description>PLG_RENTALOT_JINBOX_XML_DESCRIPTION</description>
+
+	<files>
+		<filename plugin="jinbox">jinbox.php</filename>
+		<filename>index.html</filename>
+	</files>
+
+	<config>
+		<fields name="params">
+			<fieldset name="basic">
+
+				<field name="jinbox_user" type="user"
+					class="input-large"
+					label="Send Joomla message to"
+					description="Select administrator user who will received incoming joomla private message when sumbit enquiry from Rentalot.">
+				</field>
+
+			</fieldset>
+		</fields>
+	</config>
+
+</extension>
