@@ -9,6 +9,10 @@ Licence		: GNU General Public License
 defined('_JEXEC') or die('Restricted Access');
 require_once JPATH_ADMINISTRATOR.'/components/com_rentalotplus/helpers/email_helper.php';
 
+//GW : adding classes to be used !
+use Joomla\CMS\Factory;
+use Joomla\CMS\Plugin\PluginHelper;
+
 class RentalotplusControllerEnquiry extends JControllerLegacy
 {
 function __construct()
@@ -208,33 +212,47 @@ function ajax_submit()
 		
 // Send the email to the client, if required
 
+    	//GW : moving info client outside the IF block to pass it to the plugin event
+    	$email_info_client = array();
+	$email_info_client['email_to'] = $post_data->email;			// Client
+	$email_info_client['reply_to'] = $config_model->getData('email_to');	// Admin
+	$email_info_client['subject'] = $email_subject;
+	$email_info_client['body'] = $email_body;
+	
 	if ( ( ($config_data->enq_show_copy == LARP_COPYME_CHOOSE) && ($post_data->_copyMe == 1) )
 	|| ($config_data->enq_show_copy == LARP_COPYME_ALWAYS) )
 		{
 		$template = $config_model->getOne('TEMPLATE_ENQUIRY_USER', 'name');		// need the subject and the text
 		$email_subject = LARP_email::email_merge($booking_model->_data, $template->subject, $date_format);
 		$email_body = LARP_email::email_merge($booking_model->_data, $template->value, $date_format);
-		$email_info_client = array();
-		$email_info_client['email_to'] = $post_data->email;						// Client
-		$email_info_client['reply_to'] = $config_model->getData('email_to');	// Admin
-		$email_info_client['subject'] = $email_subject;
-		$email_info_client['body'] = $email_body;
-        $log_title = $email_info_client['email_to'].' - '.$email_info_client['subject'];
+	        $log_title = $email_info_client['email_to'].' - '.$email_info_client['subject'];
         
 		$message = '';
-		if (LARP_email::sendEmail($email_info_client, $message))
+
+	//GW : replace ... if (LARP_email::sendEmail($email_info_client, $message))
+        //GW : PR to get back the state of the email sending, and send it to the trigger event below
+        $isSentOk = LARP_email::sendEmail($email_info_client, $message);
+        if($isSentOk)         
             {
-			$log_detail = $email_body.'<br />['.JText::_('COM_RENTALOTPLUS_EMAIL_ACCEPTED').']';
-            $log_model->create_new(LARP_LOG_CLIENT_EMAIL_OK, $log_title, $log_detail);
+		$log_detail = $email_body.'<br />['.JText::_('COM_RENTALOTPLUS_EMAIL_ACCEPTED').']';
+            	$log_model->create_new(LARP_LOG_CLIENT_EMAIL_OK, $log_title, $log_detail);
             }
         else
-			{
+	    {
 	        LARP_trace::trace("Email sending failed: ".$message);
-			$log_detail = '<h4 class="lad_error_msg">'.$message.'</h4>'.$email_body;
-            $log_model->create_new(LARP_LOG_EMAIL_FAIL, $log_title, $log_detail);
-			}
-		}
+		$log_detail = '<h4 class="lad_error_msg">'.$message.'</h4>'.$email_body;
+            	$log_model->create_new(LARP_LOG_EMAIL_FAIL, $log_title, $log_detail);
+	    }		
+	}
 
+    //GW : PR to replace the emails sending by plugins events to personnalize the form save behavior
+    PluginHelper::importPlugin('rentalot');
+    // permits to do something after sending the enquiry mail to visitor
+    $app = Factory::getApplication();
+    $result = (array) $app->triggerEvent('onEnquiryAfterSentMail', 
+            array('com_rentalot.enquiry', $booking_model, $email_info_client)
+    );    
+	
 // Show the confirmation view
 	
 	$template = $config_model->getData('TEMPLATE_ENQ_ACKNOWLEDGE_TEXT');
