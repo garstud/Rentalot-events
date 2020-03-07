@@ -18,32 +18,74 @@ class PlgRentalotJinbox extends CMSPlugin
 	public function __construct( &$subject , $config )
 	{
 		parent::__construct($subject, $config);
+	// define a Log to trace debug
+        JLog::addLogger( 
+            array('text_file' => 'com_rentalot.log.php'),
+            JLog::ALL,
+            array('jinbox')
+        );
 	}
-	//  			onRentalotSubmitEnquiry
-	public function onEnquiryAfterSentMail ($context, $bookingModel, $emailInfoClient)
+
+    /**
+     * Event after submiting a Enquiry request form
+     *
+     * @param   string   $context       define the context of the event execution.
+     * @param   object   $bookingModel  object contains input form data.
+     * @param   array    $emailInfoClient  info from the sent mail.
+     * @param   boolean  $isMailSent    the mail has been sent (1) or not (0).
+     */
+    public function onRentalotSubmitEnquiry($context, $bookingModel, $emailInfoClient, $isMailSent)
 	{
-        LARP_trace::trace("Enquiry jinbox ".$context);	
+        if (JDEBUG) JLog::add("onRentalotSubmitEnquiry ".$context, JLog::DEBUG, 'jinbox');
 		if($context!="com_rentalot.enquiry") return;		
 		
 		// Send message
-		$inboxTitle= "[".$bookingModel->_data->unit_name."] Contact resa from  ".$emailInfoClient['email_to'];
-		$inboxMsg  = "Demande de reservation recu :<br />";
+		$inboxTitle= "[".$bookingModel->_data->unit_name."] Enquiry from  ".$emailInfoClient['email_to'];
+		$inboxMsg  = "Demande de reservation recue : ".$context."<br />";
 		$inboxMsg .= "- par : ".$bookingModel->_data->forenames." ".$bookingModel->_data->surname."<br/>";
 		$inboxMsg .= "- pour le gite : <b>".$bookingModel->_data->unit_name."</b><br/>";
 		$inboxMsg .= "- Du  ".$bookingModel->_data->date_from." au  ".$bookingModel->_data->date_to."<br/>";
-		$inboxMsg .= "- Nb adultes : ".$bookingModel->_data->udf2."<br/>";
-		$inboxMsg .= "- Nb enfants : ".$bookingModel->_data->udf3."<br/>";
-		$inboxMsg .= "- Téléphone : ".$bookingModel->_data->udf4."<br/>";
+		$inboxMsg .= "- udf2 : ".$bookingModel->_data->udf2."<br/>";
+		$inboxMsg .= "- udf3 : ".$bookingModel->_data->udf3."<br/>";
+		$inboxMsg .= "- udf4 : ".$bookingModel->_data->udf4."<br/>";
 		$inboxMsg .= "- Msg :<br />".$bookingModel->_data->comments;
 				
 		$uid = $this->params->get('jinbox_user');
-    LARP_trace::trace("Enquiry jinbox uid ".$uid);	
+       		if (JDEBUG) JLog::add("send to uid ".$uid, JLog::DEBUG, 'jinbox');
 		$this->_sendJinboxMessage($uid, $inboxTitle, $inboxMsg);
 		
 		return true;
 	}	
 	
-	// Insert the object into the Joomla Messages table.
+    /**
+     * Event after submiting a booking form
+     *
+     * @param   string   $context      define the context of the event execution.
+     * @param   array    $postData     the content of the form.
+     * @param   object   $bookingModel  object contains input form data.
+     * @param   boolean  $check        the mail has been sent (1) or not (0).
+     */
+	public function onRentalotSubmitBooking($context, $postData, $bookingModel, $check)
+	{
+        if (JDEBUG) JLog::add("onRentalotSubmitBooking ".$context, JLog::DEBUG, 'jinbox');
+		if($context!="com_rentalot.booking") return;		
+		
+		// Send message
+		$inboxTitle= "[".$bookingModel->_data->unit_id."] Booking from  ".$postData['email'];
+		$inboxMsg  = "Reservation ferme recue : ".$context."<br />";
+		$inboxMsg .= "- par : ".$postData['forenames']." ".$postData['surname']."<br/>";
+		$inboxMsg .= "- pour le gite : <b>".$bookingModel->_data->unit_id."</b><br/>";
+		$inboxMsg .= "- Du  ".$bookingModel->_data->date_from." au  ".$bookingModel->_data->date_to."<br/>";
+		$inboxMsg .= "- Msg :<br />".$postData['comments'];   
+				
+		$uid = $this->params->get('jinbox_user');
+        	if (JDEBUG) JLog::add("send to uid ".$uid, JLog::DEBUG, 'jinbox');
+		$this->_sendJinboxMessage($uid, $inboxTitle, $inboxMsg);
+		
+		return true;
+	}	
+	
+	// Insert the object into the Joomla Messages table for the admin Uid.
 	private function _sendJinboxMessage($uid, $inboxTitle, $inboxMsg) {
 		try {
 			// save in JInBox
@@ -52,14 +94,14 @@ class PlgRentalotJinbox extends CMSPlugin
 			$inbox->user_id_to = $uid;
 			$inbox->date_time = Factory::getDate()->toSql();
 			$inbox->state = 0; //=non-lu
-			$inbox->priority = 0; //$inboxPrio; //FIXME 4 : inutilisé ???
+			$inbox->priority = 0; // inutilisé dasn Joomla !?
 			$inbox->subject = $inboxTitle;
 			$inbox->message = $inboxMsg;			
 			$result = $this->db->insertObject('#__messages', $inbox);
 			$newMsgId = $this->db->insertid();
 		}
 		catch(Exception $e) {
-			$this->app->enqueueMessage(get_class($this)." ".__FUNCTION__." on Jinbox insert : ".$e->getMessage(), 'warning'); // FIXME 2 : en Log d'alerte plutot !
+            JLog::add(get_class($this)." ".__FUNCTION__." Error on Jinbox insert : ".$e->getMessage(), JLog::ERROR, 'jinbox');
 		}
 	}
 }
