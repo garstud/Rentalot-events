@@ -47,6 +47,10 @@ the controllers/enquirycontroller.php has been modified with the following lines
     $isSentOk = LARP_email::sendEmail($email_info_client, $message);
     if($isSentOk) ...
 ...
+    $email_info_client = array();
+    $email_info_client['email_to'] = $post_data->email;						// Client
+	$email_info_client['reply_to'] = $config_model->getData('email_to');	// Admin
+...
     PluginHelper::importPlugin('rentalot');
     // permits to do something after sending the enquiry mail to visitor
     $app = Factory::getApplication();
@@ -55,7 +59,7 @@ the controllers/enquirycontroller.php has been modified with the following lines
     ); 
 ```
 
-See history updates on the PHP file to check codes updates.
+See [history updates on the PHP file](https://github.com/garstud/Rentalot-events/commit/4fc04a80b56fdbe4085d905c587f1014a95dccd4#diff-1594ab3147f4697720e74e595d1ede73) to check codes updates.
 
 ### Booking
 the controllers/bookngcontroller.php has been modified with the following lines of code :
