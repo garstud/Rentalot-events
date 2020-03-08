@@ -3,7 +3,7 @@ Adding some events to trigger plugins in the Rentalot component
 
 ## Plugin Events
 
-Add event **'onRentalotSubmitEnquiry'** in controller Enquiry at the end of the ajax_submit to add taks when a request is sent.
+Add event **'onRentalotSubmitEnquiry'** in controller Enquiry at the end of the ajax_submit to add tasks when a request is sent.
 
 ```/**
      * Event after submiting a Enquiry request form
@@ -17,7 +17,7 @@ Add event **'onRentalotSubmitEnquiry'** in controller Enquiry at the end of the 
 ```
 
 
-Add event **'onRentalotSubmitBooking'** in controller Bookink at the end of the ajax_submit to add taks when a booking is sent.
+Add event **'onRentalotSubmitBooking'** in controller Booking at the end of the ajax_submit to add tasks when a booking is sent.
 
 ```/**
      * Event after submiting a booking form
@@ -80,4 +80,30 @@ See [history updates on the PHP file](https://github.com/garstud/Rentalot-events
 
 
 # Plugins example
-The folder **'plugins'** contains plugins in the joomla group/type **'rentalot'** to explain how to developp them and to test them on Rentalot component Enquiries or Booking with the previous modification of the code in the controller !
+The folder **'plugins'** contains plugins in the joomla group/type **'rentalot'** to explain how to developp them and to test them on Rentalot component Enquiries or Booking with the previous modification of the code in the controller!
+
+## XML Manifest:
+- group = "rentalot"
+- name = "plg_rentalot_(plugin name)"
+```
+<?xml version="1.0" encoding="utf-8"?>
+<extension version="3.8" type="plugin" group="rentalot" method="upgrade">
+	<name>plg_rentalot_myplugin</name>
+...
+```
+see the [manifest](https://github.com/garstud/Rentalot-events/blob/master/plugins/rentalot/jinbox/jinbox.xml) of the example plugin.
+
+## PHP plugin script:
+- class name = "PlgRentalot(Plugin name)"
+```
+<?php
+defined( '_JEXEC' ) or die( 'Restricted access' );
+use Joomla\CMS\Plugin\CMSPlugin;
+use Joomla\CMS\Factory;
+
+class PlgRentalotMyplugin extends CMSPlugin
+...
+```
+And add events you want: onRentalotSubmitEnquiry, onRentalotSubmitBooking ...
+
+see the [script](https://github.com/garstud/Rentalot-events/blob/master/plugins/rentalot/jinbox/jinbox.php) of the example plugin.
