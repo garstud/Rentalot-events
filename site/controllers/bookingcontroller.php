@@ -8,6 +8,10 @@ Licence		: GNU General Public License
 *********************************************************************/
 defined('_JEXEC') or die('Restricted Access');
 
+//Hacking : adding classes to be used !
+use Joomla\CMS\Factory;
+use Joomla\CMS\Plugin\PluginHelper;
+
 class RentalotplusControllerBooking extends JControllerLegacy
 {
 
@@ -143,6 +147,14 @@ function ajax_book1_submit()
 // Calculate the payment schedule and the amount due now
 
 	$this->backend_booking_model->calculatePaymentSchedule($this->config_data, $this->currency_rate);
+
+	//Hacking : PR to replace the emails sending by plugins events to personnalize the form save behavior
+	PluginHelper::importPlugin('rentalot');
+	// permits to do something after sending the booking mail to visitor
+	$app = Factory::getApplication();
+	$result = (array) $app->triggerEvent('onRentalotSubmitBooking', 
+		array('com_rentalot.booking', $post_data, $this->backend_booking_model, $check)
+	); 	
 	
 // Display book2, the confirmation page
 
