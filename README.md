@@ -76,7 +76,7 @@ the controllers/bookngcontroller.php has been modified with the following lines 
     );  
 ```
 
-See history updates on the PHP file to check codes updates.
+See [history updates on the PHP file](https://github.com/garstud/Rentalot-events/commit/dbf6b4c0f3146e943f2ec689d1905851f2b51287#diff-2fa14970945f04b3c2497cfcc073afc9) to check codes updates.
 
 
 # Plugins example
